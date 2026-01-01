@@ -4,21 +4,21 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { reportsApi } from '@/lib/api/reports'
+import { ordersApi } from '@/lib/api/orders'
 import { Button } from '@/components/shared/Button'
 import { DatePicker } from '@/components/admin/DatePicker'
 import { formatCurrency, formatNumber } from '@/lib/utils'
 import { formatJalaliDate, formatJalaliDateTime, getTodayJalali, convertJalaliToMiladi } from '@/lib/utils/date'
-import type { SalesReport, TransactionReport, ProductReport, StockReport, DailyReport } from '@/lib/api/reports'
+import type { SalesReport, ProductReport, StockReport, DailyReport } from '@/lib/api/reports'
 
 export function ReportsManager() {
-  const [activeReport, setActiveReport] = useState<'sales' | 'transactions' | 'products' | 'stock' | 'daily'>('sales')
+  const [activeReport, setActiveReport] = useState<'sales' | 'products' | 'stock' | 'daily'>('sales')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [dailyDate, setDailyDate] = useState(getTodayJalali())
   
   // Pagination states for each report
   const [salesPage, setSalesPage] = useState(1)
-  const [transactionsPage, setTransactionsPage] = useState(1)
   const [productsPage, setProductsPage] = useState(1)
   const [stockPage, setStockPage] = useState(1)
   const [dailyPage, setDailyPage] = useState(1)
@@ -34,21 +34,6 @@ export function ReportsManager() {
       page_size: pageSize,
     }),
     enabled: activeReport === 'sales',
-    staleTime: 0,
-    gcTime: 0, // cacheTime in older versions
-    refetchOnMount: true,
-  })
-
-  // گزارش تراکنش‌ها
-  const { data: transactionsData, isLoading: transactionsLoading } = useQuery({
-    queryKey: ['transactions-report', startDate, endDate, transactionsPage, pageSize],
-    queryFn: () => reportsApi.getTransactionReport({
-      start_date: convertJalaliToMiladi(startDate) || undefined,
-      end_date: convertJalaliToMiladi(endDate) || undefined,
-      page: transactionsPage,
-      page_size: pageSize,
-    }),
-    enabled: activeReport === 'transactions',
     staleTime: 0,
     gcTime: 0, // cacheTime in older versions
     refetchOnMount: true,
@@ -97,13 +82,12 @@ export function ReportsManager() {
     refetchOnMount: true,
   })
 
-  const isLoading = salesLoading || transactionsLoading || productsLoading || stockLoading || dailyLoading
+  const isLoading = salesLoading || productsLoading || stockLoading || dailyLoading
 
   // Reset page when report type changes
-  const handleReportChange = (report: 'sales' | 'transactions' | 'products' | 'stock' | 'daily') => {
+  const handleReportChange = (report: 'sales' | 'products' | 'stock' | 'daily') => {
     setActiveReport(report)
     setSalesPage(1)
-    setTransactionsPage(1)
     setProductsPage(1)
     setStockPage(1)
     setDailyPage(1)
@@ -174,7 +158,8 @@ export function ReportsManager() {
   }
 
   // Helper function to translate order status
-  const translateOrderStatus = (status: string): string => {
+  const translateOrderStatus = (status: string | undefined | null): string => {
+    if (!status) return 'نامشخص'
     const statusMap: Record<string, string> = {
       'pending': 'در انتظار',
       'processing': 'در حال پردازش',
@@ -186,7 +171,8 @@ export function ReportsManager() {
   }
 
   // Helper function to translate payment status
-  const translatePaymentStatus = (status: string): string => {
+  const translatePaymentStatus = (status: string | undefined | null): string => {
+    if (!status) return 'نامشخص'
     const statusMap: Record<string, string> = {
       'pending': 'در انتظار',
       'processing': 'در حال پردازش',
@@ -198,74 +184,15 @@ export function ReportsManager() {
     return statusMap[status.toLowerCase()] || status
   }
 
-  // Helper function to download blob as file
-  const downloadBlob = (blob: Blob, filename: string) => {
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = filename
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-  }
-
-  // Export functions using backend API
-  const handleExportSales = async () => {
+  // Handle reprint receipt
+  const handleReprintReceipt = async (orderNumber: string) => {
     try {
-      const blob = await reportsApi.exportSalesReport({
-        start_date: convertJalaliToMiladi(startDate) || undefined,
-        end_date: convertJalaliToMiladi(endDate) || undefined,
-      })
-      const date = formatJalaliDate(new Date()).replace(/\//g, '-')
-      downloadBlob(blob, `گزارش_فروش_${date}.xlsx`)
+      await ordersApi.reprintReceipt(orderNumber)
+      // You can add a toast notification here if needed
+      console.log('Receipt reprinted successfully for order:', orderNumber)
     } catch (error) {
-      console.error('Error exporting sales report:', error)
-    }
-  }
-
-  const handleExportTransactions = async () => {
-    try {
-      const blob = await reportsApi.exportTransactionReport({
-        start_date: convertJalaliToMiladi(startDate) || undefined,
-        end_date: convertJalaliToMiladi(endDate) || undefined,
-      })
-      const date = formatJalaliDate(new Date()).replace(/\//g, '-')
-      downloadBlob(blob, `گزارش_تراکنش_${date}.xlsx`)
-    } catch (error) {
-      console.error('Error exporting transactions report:', error)
-    }
-  }
-
-  const handleExportProducts = async () => {
-    try {
-      const blob = await reportsApi.exportProductReport()
-      const date = formatJalaliDate(new Date()).replace(/\//g, '-')
-      downloadBlob(blob, `گزارش_محصولات_${date}.xlsx`)
-    } catch (error) {
-      console.error('Error exporting products report:', error)
-    }
-  }
-
-  const handleExportStock = async () => {
-    try {
-      const blob = await reportsApi.exportStockReport()
-      const date = formatJalaliDate(new Date()).replace(/\//g, '-')
-      downloadBlob(blob, `گزارش_موجودی_${date}.xlsx`)
-    } catch (error) {
-      console.error('Error exporting stock report:', error)
-    }
-  }
-
-  const handleExportDaily = async () => {
-    try {
-      const blob = await reportsApi.exportDailyReport({
-        date: convertJalaliToMiladi(dailyDate) || undefined,
-      })
-      const date = formatJalaliDate(new Date()).replace(/\//g, '-')
-      downloadBlob(blob, `گزارش_روزانه_${date}.xlsx`)
-    } catch (error) {
-      console.error('Error exporting daily report:', error)
+      console.error('Error reprinting receipt:', error)
+      // You can add error notification here
     }
   }
 
@@ -279,46 +206,41 @@ export function ReportsManager() {
 
       {/* Report Type Tabs */}
       <div className="bg-card dark:bg-card-dark rounded-2xl p-6 border border-border dark:border-border-dark">
-        <div className="flex flex-wrap gap-2 mb-6">
-          <Button
-            variant={activeReport === 'sales' ? 'primary' : 'outline'}
-            size="sm"
-            onClick={() => handleReportChange('sales')}
-          >
-            گزارش فروش
-          </Button>
-          <Button
-            variant={activeReport === 'transactions' ? 'primary' : 'outline'}
-            size="sm"
-            onClick={() => handleReportChange('transactions')}
-          >
-            گزارش تراکنش‌ها
-          </Button>
-          <Button
-            variant={activeReport === 'products' ? 'primary' : 'outline'}
-            size="sm"
-            onClick={() => handleReportChange('products')}
-          >
-            گزارش محصولات
-          </Button>
-          <Button
-            variant={activeReport === 'stock' ? 'primary' : 'outline'}
-            size="sm"
-            onClick={() => handleReportChange('stock')}
-          >
-            گزارش موجودی
-          </Button>
-          <Button
-            variant={activeReport === 'daily' ? 'primary' : 'outline'}
-            size="sm"
-            onClick={() => handleReportChange('daily')}
-          >
-            گزارش روزانه
-          </Button>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={activeReport === 'sales' ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => handleReportChange('sales')}
+            >
+              گزارش فروش
+            </Button>
+            <Button
+              variant={activeReport === 'products' ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => handleReportChange('products')}
+            >
+              گزارش محصولات
+            </Button>
+            <Button
+              variant={activeReport === 'stock' ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => handleReportChange('stock')}
+            >
+              گزارش موجودی
+            </Button>
+            <Button
+              variant={activeReport === 'daily' ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => handleReportChange('daily')}
+            >
+              گزارش روزانه
+            </Button>
+          </div>
         </div>
 
         {/* Date Filters */}
-        {(activeReport === 'sales' || activeReport === 'transactions') && (
+        {activeReport === 'sales' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <DatePicker
               label="از تاریخ"
@@ -326,7 +248,6 @@ export function ReportsManager() {
               onChange={(e) => {
                 setStartDate(e.target.value)
                 setSalesPage(1)
-                setTransactionsPage(1)
               }}
             />
             <DatePicker
@@ -335,7 +256,6 @@ export function ReportsManager() {
               onChange={(e) => {
                 setEndDate(e.target.value)
                 setSalesPage(1)
-                setTransactionsPage(1)
               }}
             />
           </div>
@@ -353,30 +273,6 @@ export function ReportsManager() {
             />
           </div>
         )}
-
-        {/* Export Button */}
-        <div className="flex justify-end mt-6">
-          <Button
-            onClick={() => {
-              if (activeReport === 'sales') handleExportSales()
-              else if (activeReport === 'transactions') handleExportTransactions()
-              else if (activeReport === 'products') handleExportProducts()
-              else if (activeReport === 'stock') handleExportStock()
-              else if (activeReport === 'daily') handleExportDaily()
-            }}
-            disabled={isLoading || !(
-              (activeReport === 'sales' && salesData?.result) ||
-              (activeReport === 'transactions' && transactionsData?.result) ||
-              (activeReport === 'products' && productsData?.result) ||
-              (activeReport === 'stock' && stockData?.result) ||
-              (activeReport === 'daily' && dailyData?.result)
-            )}
-            className="bg-green-600 hover:bg-green-700 text-white border-0 focus:ring-green-500 dark:bg-green-600 dark:hover:bg-green-700"
-            size="sm"
-          >
-            📥 دانلود اکسل
-          </Button>
-        </div>
       </div>
 
       {/* Report Content */}
@@ -425,6 +321,7 @@ export function ReportsManager() {
                             <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">مبلغ</th>
                             <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">وضعیت</th>
                             <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">تاریخ</th>
+                            <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">عملیات</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border dark:divide-border-dark">
@@ -443,7 +340,23 @@ export function ReportsManager() {
                                 </span>
                               </td>
                               <td className="px-6 py-4 text-sm text-text dark:text-text-dark">
-                                {formatJalaliDate(order.created_at)}
+                                {formatJalaliDateTime(order.created_at)}
+                              </td>
+                              <td className="px-6 py-4 text-sm">
+                                <div className="flex items-center justify-center">
+                                  {(order.status === 'paid' || order.payment_status === 'paid') ? (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleReprintReceipt(order.order_number)}
+                                      className="text-xs"
+                                    >
+                                      چاپ مجدد
+                                    </Button>
+                                  ) : (
+                                    <span className="text-lg text-text-secondary dark:text-gray-400">-</span>
+                                  )}
+                                </div>
                               </td>
                             </tr>
                           ))}
@@ -452,85 +365,6 @@ export function ReportsManager() {
                     </div>
                   </div>
                   {renderPagination(salesPage, setSalesPage, salesData.result.count, !!salesData.result.next)}
-                </>
-              )}
-            </motion.div>
-          )}
-
-          {/* Transactions Report */}
-          {activeReport === 'transactions' && transactionsData?.result && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-6"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-card dark:bg-card-dark rounded-2xl p-6 border border-border dark:border-border-dark">
-                  <p className="text-sm text-text-secondary dark:text-gray-400 mb-2">کل تراکنش‌ها</p>
-                  <p className="text-2xl font-bold text-text dark:text-text-dark">
-                    {formatNumber(transactionsData.result.summary?.total_transactions || 0)}
-                  </p>
-                </div>
-                <div className="bg-card dark:bg-card-dark rounded-2xl p-6 border border-border dark:border-border-dark">
-                  <p className="text-sm text-text-secondary dark:text-gray-400 mb-2">تراکنش‌های موفق</p>
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {formatNumber(transactionsData.result.summary?.successful_transactions || 0)}
-                  </p>
-                </div>
-                <div className="bg-card dark:bg-card-dark rounded-2xl p-6 border border-border dark:border-border-dark">
-                  <p className="text-sm text-text-secondary dark:text-gray-400 mb-2">تراکنش‌های ناموفق</p>
-                  <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                    {formatNumber(transactionsData.result.summary?.failed_transactions || 0)}
-                  </p>
-                </div>
-                <div className="bg-card dark:bg-card-dark rounded-2xl p-6 border border-border dark:border-border-dark">
-                  <p className="text-sm text-text-secondary dark:text-gray-400 mb-2">مجموع مبلغ</p>
-                  <p className="text-2xl font-bold text-text dark:text-text-dark">
-                    {formatCurrency(transactionsData.result.summary?.total_amount || 0)}
-                  </p>
-                </div>
-              </div>
-
-              {transactionsData.result.results && transactionsData.result.results.length > 0 && (
-                <>
-                  <div className="bg-card dark:bg-card-dark rounded-2xl border border-border dark:border-border-dark overflow-hidden">
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-gray-50 dark:bg-gray-800">
-                          <tr>
-                            <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">شماره تراکنش</th>
-                            <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">شماره سفارش</th>
-                            <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">مبلغ</th>
-                            <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">وضعیت</th>
-                            <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">تاریخ</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border dark:divide-border-dark">
-                          {transactionsData.result.results.map((transaction) => (
-                            <tr key={transaction.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                              <td className="px-6 py-4 text-sm text-text dark:text-text-dark">{transaction.transaction_id}</td>
-                              <td className="px-6 py-4 text-sm text-text dark:text-text-dark">{transaction.order_number}</td>
-                              <td className="px-6 py-4 text-sm text-text dark:text-text-dark">{formatCurrency(transaction.amount)}</td>
-                              <td className="px-6 py-4 text-sm">
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                  transaction.status === 'success' || transaction.status === 'paid' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
-                                  transaction.status === 'pending' || transaction.status === 'processing' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                                  transaction.status === 'cancelled' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' :
-                                  'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                                }`}>
-                                  {translatePaymentStatus(transaction.status)}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 text-sm text-text dark:text-text-dark">
-                                {formatJalaliDate(transaction.created_at)}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                  {renderPagination(transactionsPage, setTransactionsPage, transactionsData.result.count, !!transactionsData.result.next)}
                 </>
               )}
             </motion.div>
@@ -685,9 +519,9 @@ export function ReportsManager() {
                   </p>
                 </div>
                 <div className="bg-card dark:bg-card-dark rounded-2xl p-6 border border-border dark:border-border-dark">
-                  <p className="text-sm text-text-secondary dark:text-gray-400 mb-2">میانگین ارزش سفارش</p>
+                  <p className="text-sm text-text-secondary dark:text-gray-400 mb-2">تعداد تراکنش‌ها</p>
                   <p className="text-2xl font-bold text-text dark:text-text-dark">
-                    {formatCurrency(dailyData.result.summary?.average_order_value || 0)}
+                    {formatNumber(dailyData.result.summary?.total_transactions || 0)}
                   </p>
                 </div>
               </div>
@@ -703,28 +537,49 @@ export function ReportsManager() {
                             <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">مبلغ</th>
                             <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">وضعیت</th>
                             <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">تاریخ</th>
+                            <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">عملیات</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border dark:divide-border-dark">
-                          {dailyData.result.results.map((order) => (
-                            <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                              <td className="px-6 py-4 text-sm text-text dark:text-text-dark">{order.order_number}</td>
-                              <td className="px-6 py-4 text-sm text-text dark:text-text-dark">{formatCurrency(order.total_amount)}</td>
-                              <td className="px-6 py-4 text-sm">
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                  order.status === 'paid' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
-                                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                                  order.status === 'cancelled' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                                  'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                                }`}>
-                                  {translateOrderStatus(order.status)}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 text-sm text-text dark:text-text-dark">
-                                {formatJalaliDate(order.created_at)}
-                              </td>
-                            </tr>
-                          ))}
+                          {dailyData.result.results.map((order, index) => {
+                            // Use payment_status if status is not available
+                            const status = order.status || order.payment_status
+                            return (
+                              <tr key={order.id || `order-${index}-${order.order_number}`} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                <td className="px-6 py-4 text-sm text-text dark:text-text-dark">{order.order_number}</td>
+                                <td className="px-6 py-4 text-sm text-text dark:text-text-dark">{formatCurrency(order.total_amount)}</td>
+                                <td className="px-6 py-4 text-sm">
+                                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                    status === 'paid' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
+                                    status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                    status === 'cancelled' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                                    'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                                  }`}>
+                                    {translatePaymentStatus(status)}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 text-sm text-text dark:text-text-dark">
+                                  {formatJalaliDateTime(order.created_at)}
+                                </td>
+                                <td className="px-6 py-4 text-sm">
+                                  <div className="flex items-center justify-center">
+                                    {status === 'paid' || order.payment_status === 'paid' ? (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleReprintReceipt(order.order_number)}
+                                        className="text-xs"
+                                      >
+                                        چاپ مجدد
+                                      </Button>
+                                    ) : (
+                                      <span className="text-lg text-text-secondary dark:text-gray-400">-</span>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            )
+                          })}
                         </tbody>
                       </table>
                     </div>

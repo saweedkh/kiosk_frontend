@@ -181,18 +181,18 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
     return (
       <div className="relative" ref={containerRef}>
         <div onClick={() => setIsOpen(!isOpen)}>
-          <Input
-            ref={ref}
-            label={label}
-            type="text"
-            value={value || ''}
-            onChange={onChange}
-            onBlur={onBlur}
-            name={name}
-            placeholder={placeholder}
-            error={error}
-            readOnly
-          />
+        <Input
+          ref={ref}
+          label={label}
+          type="text"
+          value={value || ''}
+          onChange={onChange}
+          onBlur={onBlur}
+          name={name}
+          placeholder={placeholder}
+          error={error}
+          readOnly
+        />
         </div>
         <div className="absolute left-2 top-1/2 -translate-y-1/2 mt-4 pointer-events-none">
           <svg

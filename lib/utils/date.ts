@@ -3,13 +3,31 @@ import PersianDate from 'persian-date'
 import moment from 'moment-jalaali'
 
 export function formatJalaliDate(date: Date | string): string {
-  const persianDate = new PersianDate(date)
+  // Ensure we have a valid Date object
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  
+  // Check if date is valid
+  if (isNaN(dateObj.getTime())) {
+    console.error('Invalid date:', date)
+    return ''
+  }
+  
+  const persianDate = new PersianDate(dateObj)
   return persianDate.format('YYYY/MM/DD')
 }
 
 export function formatJalaliDateTime(date: Date | string): string {
-  const persianDate = new PersianDate(date)
-  return persianDate.format('YYYY/MM/DD HH:mm')
+  // Ensure we have a valid Date object
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  
+  // Check if date is valid
+  if (isNaN(dateObj.getTime())) {
+    console.error('Invalid date:', date)
+    return ''
+  }
+  
+  const persianDate = new PersianDate(dateObj)
+  return persianDate.format('YYYY/MM/DD HH:mm:ss')
 }
 
 export function getTodayJalali(): string {
@@ -21,7 +39,16 @@ export function getTehranTime(): Date {
 }
 
 export function formatTime(date: Date | string): string {
-  const persianDate = new PersianDate(date)
+  // Ensure we have a valid Date object
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  
+  // Check if date is valid
+  if (isNaN(dateObj.getTime())) {
+    console.error('Invalid date:', date)
+    return ''
+  }
+  
+  const persianDate = new PersianDate(dateObj)
   return persianDate.format('HH:mm')
 }
 

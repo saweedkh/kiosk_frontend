@@ -20,5 +20,12 @@ export const ordersApi = {
     )
     return response.data
   },
+
+  reprintReceipt: async (orderNumber: string): Promise<ApiResponse<any>> => {
+    const response = await apiClient.post<ApiResponse<any>>(
+      `/api/kiosk/admin/orders/receipt/${orderNumber}/reprint/`
+    )
+    return response.data
+  },
 }
 

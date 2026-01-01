@@ -255,32 +255,32 @@ export function ProductsManager() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map((product: Product, index: number) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="bg-card dark:bg-card-dark rounded-2xl border border-border dark:border-border-dark overflow-hidden"
-            >
-              <div className="relative w-full h-48 bg-gray-100 dark:bg-gray-800">
-                {product.image ? (
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    unoptimized={product.image?.startsWith('http://localhost') || product.image?.startsWith('http://')}
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none'
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                    بدون تصویر
-                  </div>
-                )}
-              </div>
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="bg-card dark:bg-card-dark rounded-2xl border border-border dark:border-border-dark overflow-hidden"
+              >
+                <div className="relative w-full h-48 bg-gray-100 dark:bg-gray-800">
+                  {product.image ? (
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      unoptimized={product.image?.startsWith('http://localhost') || product.image?.startsWith('http://')}
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                      بدون تصویر
+                    </div>
+                  )}
+                </div>
               <div className="p-6">
                 <h3 className="text-lg font-bold text-text dark:text-text-dark mb-2">
                   {product.name}

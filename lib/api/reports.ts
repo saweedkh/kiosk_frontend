@@ -24,33 +24,10 @@ export interface SalesReport {
     total_sales: number
     total_orders: number
     average_order_value: number
-    start_date?: string | null
-    end_date?: string | null
-  }
-}
-
-export interface TransactionReport {
-  count: number
-  next: string | null
-  previous: string | null
-  page_size: number
-  current_page?: number
-  total_pages?: number
-  results: Array<{
-    id: number
-    transaction_id: string
-    order_id: number
-    order_number: string
-    amount: number
-    status: string
-    gateway_name: string
-    created_at: string
-  }>
-  summary: {
     total_transactions: number
     successful_transactions: number
     failed_transactions: number
-    total_amount: number
+    successful_amount: number
     start_date?: string | null
     end_date?: string | null
   }
@@ -66,6 +43,7 @@ export interface ProductReport {
   results: Array<{
     id: number
     name: string
+    description?: string
     price: number
     stock_quantity: number
     is_active: boolean
@@ -89,9 +67,11 @@ export interface StockReport {
   results: Array<{
     id: number
     name: string
+    category_name: string
     stock_quantity: number
     price: number
     stock_value: number
+    is_active: boolean
     is_low_stock: boolean
     is_out_of_stock: boolean
   }>
@@ -109,10 +89,10 @@ export interface DailyReport {
   current_page?: number
   total_pages?: number
   results: Array<{
-    id: number
+    id?: number
     order_number: string
     total_amount: number
-    status: string
+    status?: string
     payment_status: string
     transaction_id?: string | null
     gateway_name?: string | null
@@ -124,9 +104,7 @@ export interface DailyReport {
     date: string
     total_sales: number
     total_orders: number
-    average_order_value: number
-    start_date?: string | null
-    end_date?: string | null
+    total_transactions: number
   }
 }
 
@@ -139,17 +117,6 @@ export const reportsApi = {
     page_size?: number
   }): Promise<ApiResponse<SalesReport>> => {
     const response = await apiClient.get('/api/kiosk/admin/reports/sales/', { params })
-    return response.data
-  },
-
-  // گزارش تراکنش‌ها
-  getTransactionReport: async (params?: {
-    start_date?: string
-    end_date?: string
-    page?: number
-    page_size?: number
-  }): Promise<ApiResponse<TransactionReport>> => {
-    const response = await apiClient.get('/api/kiosk/admin/reports/transactions/', { params })
     return response.data
   },
 
@@ -185,46 +152,34 @@ export const reportsApi = {
   exportSalesReport: async (params?: {
     start_date?: string
     end_date?: string
-  }): Promise<Blob> => {
+  }): Promise<string> => {
     const response = await apiClient.get('/api/kiosk/admin/reports/sales/export/', {
       params,
-      responseType: 'blob',
     })
-    return response.data
+    // API returns JSON with file_url
+    return response.data.result?.file_url || response.data.file_url || ''
   },
 
-  exportTransactionReport: async (params?: {
-    start_date?: string
-    end_date?: string
-  }): Promise<Blob> => {
-    const response = await apiClient.get('/api/kiosk/admin/reports/transactions/export/', {
-      params,
-      responseType: 'blob',
-    })
-    return response.data
+
+  exportProductReport: async (): Promise<string> => {
+    const response = await apiClient.get('/api/kiosk/admin/reports/products/export/', {})
+    // API returns JSON with file_url
+    return response.data.result?.file_url || response.data.file_url || ''
   },
 
-  exportProductReport: async (): Promise<Blob> => {
-    const response = await apiClient.get('/api/kiosk/admin/reports/products/export/', {
-      responseType: 'blob',
-    })
-    return response.data
-  },
-
-  exportStockReport: async (): Promise<Blob> => {
-    const response = await apiClient.get('/api/kiosk/admin/reports/stock/export/', {
-      responseType: 'blob',
-    })
-    return response.data
+  exportStockReport: async (): Promise<string> => {
+    const response = await apiClient.get('/api/kiosk/admin/reports/stock/export/', {})
+    // API returns JSON with file_url
+    return response.data.result?.file_url || response.data.file_url || ''
   },
 
   exportDailyReport: async (params?: {
     date?: string
-  }): Promise<Blob> => {
+  }): Promise<string> => {
     const response = await apiClient.get('/api/kiosk/admin/reports/daily/export/', {
       params,
-      responseType: 'blob',
     })
-    return response.data
+    // API returns JSON with file_url
+    return response.data.result?.file_url || response.data.file_url || ''
   },
 }

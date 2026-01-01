@@ -38,7 +38,7 @@ export default function CustomerPage() {
 
   useEffect(() => {
     setIsMounted(true);
-
+    
     // همیشه token های authentication را پاک کن برای امنیت
     // صفحه مشتری نباید نیاز به authentication داشته باشد
     const clearAuthTokens = () => {
@@ -58,15 +58,15 @@ export default function CustomerPage() {
     // This ensures user needs to login again when accessing admin
     const clearStorage = () => {
       if (typeof window === "undefined") return;
-
+      
       const referrer = document.referrer;
       const currentOrigin = window.location.origin;
-
+      
       // Check if we're coming from admin (check referrer or sessionStorage flag)
-      const isFromAdmin =
+      const isFromAdmin = 
         (referrer && referrer.includes("/admin")) ||
         sessionStorage.getItem("from-admin") === "true";
-
+      
       // Check if user came directly (no referrer or referrer is from different origin)
       // This means user typed URL directly or came from external site
       const isDirectAccess =
@@ -74,18 +74,18 @@ export default function CustomerPage() {
         referrer === "" ||
         !referrer.startsWith(currentOrigin) ||
         referrer === window.location.href;
-
+      
       // Clear other localStorage if coming from admin OR direct access
       if (isFromAdmin || isDirectAccess) {
         // Clear other Zustand persisted stores (but not auth-storage, already cleared)
         localStorage.removeItem("cart-storage");
         localStorage.removeItem("theme-storage");
-
+        
         // Clear sessionStorage flag
         sessionStorage.removeItem("from-admin");
       }
     };
-
+    
     clearStorage();
   }, []);
 
@@ -169,12 +169,12 @@ export default function CustomerPage() {
   // Extract categories array from response (handle both array and paginated response)
   const categories = (() => {
     if (!categoriesData?.result) return [];
-
+    
     // If result is an array, return it directly
     if (Array.isArray(categoriesData.result)) {
       return categoriesData.result;
     }
-
+    
     // If result is paginated (has results property), return results array
     if (
       categoriesData.result &&
@@ -185,16 +185,16 @@ export default function CustomerPage() {
         ? categoriesData.result.results
         : [];
     }
-
+    
     return [];
   })();
-
+  
   const { data: productsData, isLoading } = useQuery({
     queryKey: ["products", selectedCategory],
     queryFn: () => productsApi.getProducts({
-      category: selectedCategory || undefined,
-      is_active: true,
-    }),
+        category: selectedCategory || undefined,
+        is_active: true,
+      }),
   });
 
   const createOrderMutation = useMutation({
@@ -364,7 +364,7 @@ export default function CustomerPage() {
           <div className="px-6 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div
+                <div 
                   className="relative w-14 h-14 bg-primary rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={handleLogoClick}
                   title="کلیک کنید"
