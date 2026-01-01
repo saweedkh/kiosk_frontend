@@ -321,7 +321,7 @@ export function ReportsManager() {
                             <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">مبلغ</th>
                             <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">وضعیت</th>
                             <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">تاریخ</th>
-                            <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">عملیات</th>
+                            <th className="px-6 py-4 text-center text-sm font-bold text-text dark:text-text-dark">عملیات</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border dark:divide-border-dark">
@@ -537,7 +537,7 @@ export function ReportsManager() {
                             <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">مبلغ</th>
                             <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">وضعیت</th>
                             <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">تاریخ</th>
-                            <th className="px-6 py-4 text-right text-sm font-bold text-text dark:text-text-dark">عملیات</th>
+                            <th className="px-6 py-4 text-center text-sm font-bold text-text dark:text-text-dark">عملیات</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border dark:divide-border-dark">
