@@ -1,6 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Static export برای embed در Django
+  output: 'export',
+  distDir: 'out',
+  trailingSlash: true,
+  
   images: {
+    unoptimized: true, // برای static export
     remotePatterns: [
       {
         protocol: 'https',
@@ -12,13 +18,16 @@ const nextConfig = {
       },
     ],
   },
+  
   // Fix for static file 404s in development
   onDemandEntries: {
     maxInactiveAge: 60 * 1000, // 60 seconds
     pagesBufferLength: 10,
   },
+  
   // Suppress hydration warnings for client-only components
   reactStrictMode: true,
+  
   // Improve webpack config for better dev experience
   webpack: (config, { dev, isServer }) => {
     if (dev) {
@@ -36,6 +45,7 @@ const nextConfig = {
     }
     return config
   },
+  
   // Reduce logging in development
   logging: {
     fetches: {
