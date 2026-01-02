@@ -385,7 +385,7 @@ export default function CustomerPage() {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-text dark:text-text-dark">
-                    {process.env.NEXT_PUBLIC_STORE_NAME || 'فروشگاه ساوید'}
+                    {process.env.STORE_NAME || 'فروشگاه ساوید'}
                   </h1>
                 </div>
               </div>

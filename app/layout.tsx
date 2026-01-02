@@ -40,7 +40,7 @@ const vazir = localFont({
   display: "swap",
 });
 
-const storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'فروشگاه ساوید';
+const storeName = process.env.STORE_NAME || 'فروشگاه ساوید';
 
 export const metadata: Metadata = {
   title: `کیوسک - ${storeName}`,
