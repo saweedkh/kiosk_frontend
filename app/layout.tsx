@@ -40,8 +40,10 @@ const vazir = localFont({
   display: "swap",
 });
 
+const storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'فروشگاه ساوید';
+
 export const metadata: Metadata = {
-  title: "کیوسک - نانوایی ستاره سرخ",
+  title: `کیوسک - ${storeName}`,
   description: "سیستم مدیریت کیوسک فروش",
 };
 
